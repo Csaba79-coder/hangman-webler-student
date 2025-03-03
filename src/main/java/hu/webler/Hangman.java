@@ -5,16 +5,41 @@ import java.util.Scanner;
 
 public class Hangman {
 
-    private static int wrongTry = 158;
+    private static int wrongTry = 3;
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
+        boolean playAgain;
+        do {
+            wrongTry = 3;
+            playAgain = playGame(scanner);
+        } while (playAgain);
+    }
+
+    private static boolean playGame(Scanner scanner) {
         String word = generateRandomWord(getWords());
         String res = hidedWord(word);
         System.out.println(res);
-        String userGuess = getUserInput(scanner, "Kérek egy betűt:");
-        String whatThe = changeAGuess(word, res, userGuess);
-        System.out.println(whatThe);
+        StringBuilder updatedWord = new StringBuilder(res);
+        while (wrongTry > 0) {
+            String userGuess = getUserInput(scanner, "Kérek egy betűt:");
+            String whatThe = changeAGuess(word, updatedWord, userGuess);
+            System.out.println(whatThe);
+            if (!updatedWord.toString().contains("_")) {
+                System.out.println("Nyertél!");
+                break;
+            }
+        }
+        if (wrongTry == 0) {
+            System.out.println("Vesztettél");
+        }
+        return askPlayAgain(scanner);
+    }
+
+    private static boolean askPlayAgain(Scanner scanner) {
+        System.out.println("Új játék?");
+        String answer = scanner.next().toLowerCase();
+        return answer.equalsIgnoreCase("i");
     }
 
     private static String[] getWords() {
@@ -48,21 +73,23 @@ public class Hangman {
     }
 
     private static boolean checkIfValidGuess(String word, String letter) {
-        return word.toLowerCase().contains(letter.toLowerCase());
+        boolean isValidGuess = word.toLowerCase().contains(letter.toLowerCase());
+        if (!isValidGuess) {
+            wrongTry--;
+            System.out.println("You have " + wrongTry + " guess left");
+        }
+        return isValidGuess;
     }
 
-    private static String changeAGuess(String word, String hidedWord, String userGuess) {
+    private static String changeAGuess(String word, StringBuilder updatedWord, String userGuess) {
         if (checkIfValidGuess(word, userGuess)) {
-            StringBuilder updatedWord = new StringBuilder(hidedWord);
             for (int i = 0; i < word.length(); i++) {
                 if (word.toLowerCase().charAt(i) == userGuess.toLowerCase().charAt(0)) {
-                    // akkor ki kell cserélni
-                    // akkor a hided word-ben az alsóvonást kicserélni a megtalált betű vagy betűkre!
-                    updatedWord.setCharAt(i + 1, word.charAt(i));
+                    int index = i * 2;
+                    updatedWord.setCharAt(index, word.charAt(i));
                 }
             }
-            return updatedWord.toString();
         }
-        return hidedWord;
+        return updatedWord.toString();
     }
 }
